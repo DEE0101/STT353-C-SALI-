@@ -1,0 +1,72 @@
+---
+title: "Chapter 5 The forecaster’s Toolbox"
+author: "JUDISMA A. SALI"
+date: "2023-08-10"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(fpp3)
+```
+
+# Facebook closing stock price
+
+# Extract training data
+
+```{r}
+
+fb_stock <- gafa_stock |>
+  filter (Symbol == "FB") |>
+  mutate (trading_day = row_number ()) |>
+  update_tsibble (index = trading_day, regular = TRUE)
+```
+
+# Specify, estimate and forecast
+
+```{r}
+
+fb_stock |> model (
+  Mean = MEAN(Close),
+  Naive = NAIVE (Close),
+  Drift = RW(Close ~ drift ())
+) |>
+  forecast (h = 42) |>
+  autoplot (fb_stock, level = NULL) +
+  labs (title = "Facebook closing stock price", y = "SUS") +
+  guides (colour = guide_legend(title = "Forecast" ))
+
+```
+
+```{r}
+fb_stock|> model( Mean=MEAN(Close), Naive=NAIVE(Close), Drift=RW(Close~drift()) )|> forecast(h=42)|> autoplot(fb_stock,level=NULL)+coord_cartesian(xlim=c(1000,1300))
+```
+
+```{r}
+
+fit <- fb_stock |> model(NAIVE(Close))
+augment(fit)
+```
+
+
+```{r}
+
+gg_tsresiduals(fit)
+
+```
+
+
+```{r}
+
+augment(fit) |>
+  features(.resid, ljung_box, lag=10)
+
+```
+
